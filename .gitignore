@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.py[cod]
+database/
+dataset/
+encodings/
+reports/
+logs/
+known_faces/
+attendance.csv
+*.pkl
+*.db
+*.db-*
+models/
+*.npz
+*.onnx
