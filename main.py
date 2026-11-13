@@ -2,7 +2,7 @@
 import argparse
 import sqlite3
 import tkinter as tk
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from tkinter import messagebox
@@ -22,8 +22,13 @@ def start(path=None):
                 ("DEMO03", "Sam Lee", "Information Systems"),
             ):
                 db.add_user(key, name, department)
-            for key, hour, minute in (("DEMO01", 9, 4), ("DEMO02", 9, 8)):
-                db.mark_attendance(key, datetime.now().replace(hour=hour, minute=minute, second=0))
+            today = datetime.now().replace(hour=9, minute=0, second=0, microsecond=0)
+            for days_ago, keys in enumerate((
+                ("DEMO01", "DEMO02"), ("DEMO01", "DEMO03"),
+                ("DEMO01", "DEMO02", "DEMO03"), ("DEMO02",), ("DEMO01", "DEMO03"),
+            )):
+                for offset, key in enumerate(keys):
+                    db.mark_attendance(key, today - timedelta(days=days_ago) + timedelta(minutes=4 * offset))
         AttendanceApp(root, db, demo=path is not None)
     except (OSError, sqlite3.Error) as error:
         messagebox.showerror("Could not open workspace", str(error), parent=root)

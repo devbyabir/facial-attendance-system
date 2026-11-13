@@ -12,7 +12,7 @@ from src.vision import Vision
 
 
 def register(db: Database, vision: Vision, camera_index: int, stop: Event,
-             student_id: str, name: str, department: str) -> bool:
+             student_id: str, name: str, department: str, *, progress=None) -> bool:
     key = student_key(student_id)
     if not name.strip() or not department.strip():
         raise ValueError("Name and department are required.")
@@ -40,9 +40,11 @@ def register(db: Database, vision: Vision, camera_index: int, stop: Event,
                     x, y, width, height = faces[0].box
                     cv2.rectangle(preview, (x, y), (x + width, y + height), (30, 235, 190), 2)
                     guidance = "Vary your pose slightly, then press Space."
+                elif faces:
+                    guidance = "Multiple faces. Keep only one in frame."
                 else:
-                    guidance = "Exactly one face must be visible."
-                label(preview, f"{captured}/{CAPTURE_COUNT}   {guidance}")
+                    guidance = "No face detected. Face the camera."
+                label(preview, f"{captured} of {CAPTURE_COUNT} samples | {guidance}")
                 pressed = show_frame(window, preview)
                 if pressed in (ord("q"), ord("Q"), 27):
                     return False
@@ -52,6 +54,8 @@ def register(db: Database, vision: Vision, camera_index: int, stop: Event,
                         raise RuntimeError("Could not encode the capture.")
                     captured += 1
                     (staging / f"img_{captured:03}.jpg").write_bytes(image.tobytes())
+                    if progress is not None:
+                        progress(f"{captured} of {CAPTURE_COUNT} enrollment samples captured.")
         if stop.is_set():
             return False
         staging.rename(destination)

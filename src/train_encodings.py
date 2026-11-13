@@ -17,6 +17,7 @@ def index_path(backend: str) -> Path:
 
 def train(db: Database, vision: Vision, stop: Event, progress) -> str:
     vectors, ids = [], []
+    skipped = 0
     for user in db.get_users():
         key = user["student_id"]
         succeeded = failed = 0
@@ -35,7 +36,8 @@ def train(db: Database, vision: Vision, stop: Event, progress) -> str:
             vectors.append(vector)
             ids.append(key)
             succeeded += 1
-        progress(f"{key}: {succeeded} encoded, {failed} failed.")
+        skipped += failed
+        progress(f"{key}: {succeeded} encoded, {failed} skipped.")
     if stop.is_set():
         return "Training cancelled."
     if not vectors:
@@ -48,13 +50,13 @@ def train(db: Database, vision: Vision, stop: Event, progress) -> str:
         path.replace(index_path(vision.backend))
     finally:
         path.unlink(missing_ok=True)
-    return f"Training complete: {len(vectors)} samples for {len(set(ids))} people."
+    return f"Encodings ready: {len(vectors)} samples for {len(set(ids))} people, {skipped} skipped."
 
 
 def load_index(backend: str):
     path = index_path(backend)
     if not path.is_file():
-        raise ValueError(f"No {backend} encodings yet. Run Train Model first.")
+        raise ValueError(f"No {backend} encodings yet. Generate encodings in Settings first.")
     with np.load(path, allow_pickle=False) as index:
         vectors, ids = index["vectors"], index["ids"]
     if (vectors.ndim != 2 or vectors.shape[1] != 128 or ids.ndim != 1

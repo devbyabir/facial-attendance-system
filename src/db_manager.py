@@ -85,7 +85,8 @@ class Database:
             return cursor.rowcount == 1
 
     def get_attendance(self, date: str | None = None, student_id: str | None = None,
-                       *, start: str | None = None, end: str | None = None):
+                       *, start: str | None = None, end: str | None = None,
+                       limit: int | None = None):
         if date is not None:
             start = end = date
         filters, params = [], []
@@ -99,9 +100,12 @@ class Database:
             filters.append("student_id = ?")
             params.append(student_key(student_id))
         where = " WHERE " + " AND ".join(filters) if filters else ""
+        limit_clause = "" if limit is None else " LIMIT ?"
+        if limit is not None:
+            params.append(limit)
         with self.connect() as db:
             return db.execute(
                 "SELECT student_id, name, date, time, status FROM attendance"
-                + where + " ORDER BY date DESC, time DESC, student_id",
+                + where + " ORDER BY date DESC, time DESC, student_id" + limit_clause,
                 params,
             ).fetchall()
