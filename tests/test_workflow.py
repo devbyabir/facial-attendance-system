@@ -12,6 +12,7 @@ from openpyxl import load_workbook
 
 from src.attendance import Confirmation
 from src.db_manager import Database
+from src.recognize import recognize
 from src.reports import export_report, report_data
 from src.register_face import register
 from src.train_encodings import load_index, train
@@ -98,6 +99,36 @@ class WorkflowTests(unittest.TestCase):
             vectors, ids = load_index("opencv")
             self.assertEqual(vectors.shape, (1, 128))
             self.assertEqual(ids.tolist(), ["S01"])
+
+    def test_recognition_rejects_unknown_and_marks_confirmed_face_once(self):
+        self.db.add_user("S01", "Alex", "Computing")
+        face = Face((10, 10, 20, 20), None)
+        frame = np.zeros((64, 64, 3), dtype=np.uint8)
+        vector = np.eye(1, 128, dtype=np.float32)[0]
+        messages = []
+        with (
+            patch("src.recognize.webcam"),
+            patch("src.recognize.read_frame", return_value=frame),
+            patch("src.recognize.show_frame") as preview,
+            patch("src.recognize.load_index", return_value=(vector[None, :], ["S01"])),
+            patch("src.recognize.Vision") as detector,
+        ):
+            vision = detector.return_value
+            vision.backend = "opencv"
+            vision.detect.return_value = [face]
+            for embedding in (-vector, vector, vector):
+                vision.encode.return_value = embedding
+                preview.side_effect = [0] * 6 + [ord("q")]
+                recognize(self.db, vision, 0, Event(), messages.append)
+                if embedding is not vector:
+                    self.assertEqual(self.db.get_attendance(), [])
+        self.assertEqual(messages, ["S01: Marked today", "S01: Already marked"])
+        self.assertEqual(len(self.db.get_attendance()), 1)
+
+    def test_missing_index_explains_recovery(self):
+        with patch("src.train_encodings.ENCODINGS", self.root):
+            with self.assertRaisesRegex(ValueError, "Generate encodings"):
+                load_index("opencv")
 
     def test_unavailable_camera(self):
         from src.camera import webcam

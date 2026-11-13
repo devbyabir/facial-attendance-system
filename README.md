@@ -1,6 +1,10 @@
 # Facial Attendance System
 
-A Python desktop attendance project originally completed for my fourth-semester Object Oriented Techniques course at Zhengzhou University. The coursework prototype used Tkinter, a webcam and dlib face encodings. This portfolio refresh adds SQLite, filtered reports, a redesigned dashboard and an OpenCV recognition option.
+A Python desktop attendance project originally completed for my fourth-semester Object Oriented Techniques course at Zhengzhou University. The coursework prototype used Tkinter, a webcam and dlib face encodings. The portfolio version adds SQLite storage, CSV and Excel reports, and an OpenCV recognition option. The redesigned desktop workspace guides an operator from enrollment to attendance and reporting.
+
+[![Open live demo](https://img.shields.io/badge/Open%20live%20demo-3e51bf?style=for-the-badge)](https://devbyabir.github.io/facial-attendance-system/)
+
+The browser demo uses fictional records and simulated scans to show daily attendance, duplicate handling, filters and CSV export. For webcam recognition, run the Python desktop app.
 
 ![Desktop dashboard with fictional attendance records](docs/dashboard.jpg)
 
@@ -14,7 +18,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe main.py --demo
 ```
 
-Demo mode uses fictional records in a temporary database. You can filter and export them without a camera or model download.
+Demo mode opens a temporary database with three fictional people and five days of attendance. Use **People** to view the roster or **Attendance Records** to filter and export records without a webcam or model download.
 
 For the live workflow, close the Windows Camera app and run:
 
@@ -44,11 +48,13 @@ A trusted prebuilt wheel must match the Python version and Windows architecture.
 
 ## Use the app
 
-1. **Register New Face.** Enter a unique ID, name and department. Press Space for each of 24 samples, varying the pose slightly. The app saves a sample only when it sees one face. Press Q or Esc to cancel.
-2. **Train Model.** Encode the saved samples. The status bar reports successful and failed samples for each ID. Train again after enrolling someone new.
-3. **Start Attendance.** Present one person at a time. A match must agree across three consecutive processed frames. The preview shows the ID and marking result. Press Q or Esc, or click Stop in the dashboard.
-4. **View Records.** Enter the inclusive date range and, optionally, an ID. The summary divides days marked present by all calendar days in the filter, including weekends. It is a calendar coverage measure.
-5. **Export Report.** Choose CSV for daily records or Excel for both the records and summary sheets.
+1. Open **Settings** and run **Check camera**. Choose the OpenCV or dlib backend.
+2. In **People**, select **Register Person**. Enter a unique ID, name and department. Press Space to capture each of the 24 samples, varying the pose slightly. Only frames with one face count. Press Q or Esc to cancel.
+3. In **Settings**, select **Generate encodings**. The status bar reports usable and skipped samples. The People view shows who still needs an encoding.
+4. In **Overview**, select **Start Attendance**. Present one person at a time. The preview confirms a match across three processed frames and displays the name, ID and result. To end the run, press Q or Esc in the preview or use **Stop current task**.
+5. In **Attendance Records**, apply an inclusive date range and optional person ID. **Export report** exports the applied filter. CSV contains daily records. Excel includes daily records and a summary. The summary divides present days by calendar days in the selected range, including weekends.
+
+![Attendance Records filtered to five days of demo data](docs/attendance-records.jpg)
 
 ## Project design
 
@@ -78,6 +84,10 @@ flowchart LR
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Regression tests cover daily deduplication, filters, Excel and CSV export, confirmation and unknown rejection, multiple faces during enrollment, empty training data and camera failure. A separate test fed a sample image through capture, encoding and recognition using the downloaded OpenCV models. The first run marked attendance and replay on the same day left one database row. A blank frame produced no face. The webcam preview was verified at 640 x 480 on Windows. Live enrollment and recognition with consenting participants still need a hands-on run. No population accuracy figure has been measured.
+GitHub Actions runs the camera-free checks on Windows with Python 3.10 and 3.12. The suite covers duplicate enrollment and attendance, filtered reports, CSV/Excel export, unknown-face rejection, consecutive match confirmation, multiple faces during enrollment, missing encodings, empty training data and camera failure. The recognition workflow test uses synthetic embeddings and simulated camera frames.
+
+The Windows Tkinter demo was checked for navigation, filtering, reset and export. The original webcam preview was verified at 640 × 480. A complete live run on the redesigned app still needs a webcam and a consenting participant. To verify it, enroll one person, generate encodings, mark attendance, try a second scan on the same day, and export the resulting single row. Also try a second face in frame and reduced lighting. No population accuracy figure has been measured.
+
+Only fictional data appears in the screenshots. Local face samples, encoding indexes, databases, reports and downloaded models are excluded by `.gitignore`.
 
 For a small evaluation, use consented samples distinct from the enrollment images. Test known and unknown people across lighting conditions and record false accepts and false rejects separately. Increasing the SFace similarity threshold or decreasing dlib distance tolerance makes matching stricter. This prototype does not check liveness, so a photo may be accepted. An attendance calendar and liveness checks are future work.

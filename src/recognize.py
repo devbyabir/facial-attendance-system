@@ -44,7 +44,7 @@ def recognize(db: Database, vision: Vision, camera_index: int,
                 entry = (key, current_day)
                 if confirmation.observe(key) and entry not in outcomes:
                     saved = db.mark_attendance(key, when=now)
-                    outcomes[entry] = "Marked" if saved else "Already marked"
+                    outcomes[entry] = "Marked today" if saved else "Already marked"
                     marked += int(saved)
                     progress(f"{key}: {outcomes[entry]}")
                 if key:
