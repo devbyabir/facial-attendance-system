@@ -2,6 +2,10 @@
 
 A Python desktop attendance project originally completed for my fourth-semester Object Oriented Techniques course at Zhengzhou University. The coursework prototype used Tkinter, a webcam and dlib face encodings. The portfolio version adds SQLite storage, CSV and Excel reports, and an OpenCV recognition option. The redesigned desktop workspace guides an operator from enrollment to attendance and reporting.
 
+[![Open live demo](https://img.shields.io/badge/Open%20live%20demo-3e51bf?style=for-the-badge)](https://devbyabir.github.io/facial-attendance-system/)
+
+The browser demo uses fictional records and simulated scans to show daily attendance, duplicate handling, filters and CSV export. For webcam recognition, run the Python desktop app.
+
 ![Desktop dashboard with fictional attendance records](docs/dashboard.jpg)
 
 ## Set up on Windows
